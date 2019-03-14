@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <properties>
+        <title>Librairy JWT </title>
+    </properties>
+    <body>
+        <section name="Library JWT">
+            <subsection name="Introduction">
+				<p>
+					The purpose of this library is to write, read and verify the signature of JSON Web Tokens JWT
+                </p>
+            </subsection>
+   </section>
+    </body>
+</document>  

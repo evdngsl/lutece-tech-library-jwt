@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <properties>
+        <title>Librairy JWT </title>
+    </properties>
+    <body>
+        <section name="Bibliothèque JWT">
+            <subsection name="Introduction">
+				<p>
+					L'objet de cette bibliothèque est d'écrire, de lire et de vérifier la signature de Json Web Tokens (JWT)
+                </p>
+            </subsection>
+   </section>
+    </body>
+</document>  
