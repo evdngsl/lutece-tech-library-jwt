@@ -125,6 +125,54 @@ public class JWTUtil
         }
         return true;
     }
+    
+    /**
+     * Get a payload value with given claimName;
+     * 
+     * @param request
+     * @param strHeaderName
+     * @param strClaimName
+     * @return true if the key/values are present, false otherwise
+     */
+    public static String getPayloadValue( HttpServletRequest request, String strHeaderName, String strClaimName )
+    {
+        String strBase64JWT = request.getHeader( strHeaderName );
+
+        // If no specific Header is provided, use spec JWT : try to fetch in Authorization: Bearer HTTP Header
+        if ( strBase64JWT == null )
+        {
+            strBase64JWT = getAuthozirationBearerValue( request );
+        }
+
+        getPayloadValue( strBase64JWT, strClaimName );
+        return null;
+    }
+    
+    /**
+     * Get a payload value with given claimName;
+     * 
+     * @param strBase64JWT
+     * @param strClaimName
+     * @return true if the key/values are present, false otherwise
+     */
+    public static String getPayloadValue( String strBase64JWT, String strClaimName )
+    {
+        if ( strBase64JWT != null && !strBase64JWT.isEmpty( ) )
+        {
+            strBase64JWT = removeSignature( strBase64JWT );
+            try
+            {
+                Claims claims = Jwts.parser( ).parseClaimsJwt( strBase64JWT ).getBody( );
+
+                return (String) claims.get( strClaimName );
+            }
+            catch( Exception e )
+            {
+                LOGGER.log( Priority.ERROR, "Unable to get JWT Payload value", e );
+            }
+        }
+        return null;
+    }
 
     /**
      * Check the JWT signature with provided java security Key: this can be a RSA Public Key
