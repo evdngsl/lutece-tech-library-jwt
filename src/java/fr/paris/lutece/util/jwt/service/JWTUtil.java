@@ -34,9 +34,14 @@
 package fr.paris.lutece.util.jwt.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.TextCodec;
 import java.security.Key;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -58,7 +63,7 @@ public class JWTUtil
      * @param strHeaderName
      * @return true if the request contains a JWT, false othewise
      */
-    public static boolean containsUnsafeJWT( HttpServletRequest request, String strHeaderName )
+    public static boolean containsValidUnsafeJWT( HttpServletRequest request, String strHeaderName )
     {
         String strBase64JWT = request.getHeader( strHeaderName );
 
@@ -218,6 +223,53 @@ public class JWTUtil
 
         return checkSignature( strBase64JWT, strSecreyKey );
     }
+    
+    /**
+     * Check the signature of the JWT with a secret key
+     * 
+     * @param mapClaims
+     *              The map of claims
+     * @param expirationDate
+     *              The expiration date
+     * @param strAlgoName
+     * @param strSecreyKey
+     * @return true if the signature is checked, false otherwise
+     */
+    public static String buildBase64JWT( Map<String,String> mapClaims, Date expirationDate, String strAlgoName, String strSecreyKey )
+    {
+            JwtBuilder builder = Jwts.builder();
+            
+            builder.setIssuedAt( Date.from(Instant.now( ) ) );
+            
+            //Set claims
+            for ( Entry<String,String> entry : mapClaims.entrySet( ) )
+            {
+                builder.claim( entry.getKey( ), entry.getValue( ) );
+            }
+            
+            if ( expirationDate != null )
+            {
+                builder.setExpiration( expirationDate );
+            }
+            
+            
+            if ( strSecreyKey != null )
+            {
+                SignatureAlgorithm signatureAlgo = SignatureAlgorithm.HS256;
+                if ( strAlgoName != null && !strAlgoName.isEmpty( ) )
+                {
+                    SignatureAlgorithm signatureAlgoFromName = signatureAlgo.valueOf( strAlgoName );
+                    if ( signatureAlgoFromName != null )
+                    {
+                        signatureAlgo = signatureAlgoFromName;
+                    }
+                }
+                
+                builder.signWith( signatureAlgo, TextCodec.BASE64.encode( strSecreyKey ) );
+            }
+                
+            return builder.compact();
+    }
 
     /*
      * PRIVATE METHODS
@@ -275,7 +327,8 @@ public class JWTUtil
     {
         try
         {
-            Jwts.parser( ).setSigningKey( strSecretKey ).parseClaimsJws( strBase64JWT );
+            Jwts.parser( ).setSigningKey( TextCodec.BASE64.encode( strSecretKey ) )
+                    .parseClaimsJws( strBase64JWT );
         }
 
         catch( JwtException e )
