@@ -41,6 +41,13 @@
             <artifactId>jjwt</artifactId>
             <version>[0.9.1,)</version>
         </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>library-lutece-unit-testing</artifactId>
+            <version>2.0.9-SNAPSHOT</version>
+            <type>lutece-plugin</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <properties>
         <jiraProjectName>LJWT</jiraProjectName>
