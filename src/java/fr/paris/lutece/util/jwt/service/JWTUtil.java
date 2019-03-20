@@ -38,13 +38,14 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.TextCodec;
+import java.io.UnsupportedEncodingException;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
@@ -203,26 +204,6 @@ public class JWTUtil
         return checkSignature( strBase64JWT, key );
     }
 
-    /**
-     * Check the signature of the JWT with a secret key
-     * 
-     * @param request
-     * @param strHeaderName
-     * @param strSecreyKey
-     * @return true if the signature is checked, false otherwise
-     */
-    public static boolean checkSignature( HttpServletRequest request, String strHeaderName, String strSecreyKey )
-    {
-        String strBase64JWT = request.getHeader( strHeaderName );
-
-        // If no specific Header is provided, use spec JWT : try to fetch in Authorization: Bearer HTTP Header
-        if ( strBase64JWT == null )
-        {
-            strBase64JWT = getAuthozirationBearerValue( request );
-        }
-
-        return checkSignature( strBase64JWT, strSecreyKey );
-    }
     
     /**
      * Check the signature of the JWT with a secret key
@@ -231,11 +212,13 @@ public class JWTUtil
      *              The map of claims
      * @param expirationDate
      *              The expiration date
-     * @param strAlgoName
-     * @param strSecreyKey
+     * @param strAlgo
+     *              The algorythm name
+     * @param key
+     *              The key
      * @return true if the signature is checked, false otherwise
      */
-    public static String buildBase64JWT( Map<String,String> mapClaims, Date expirationDate, String strAlgoName, String strSecreyKey )
+    public static String buildBase64JWT( Map<String,String> mapClaims, Date expirationDate, String strAlgo, Key key )
     {
             JwtBuilder builder = Jwts.builder();
             
@@ -253,22 +236,37 @@ public class JWTUtil
             }
             
             
-            if ( strSecreyKey != null )
+            if ( key != null )
             {
-                SignatureAlgorithm signatureAlgo = SignatureAlgorithm.HS256;
-                if ( strAlgoName != null && !strAlgoName.isEmpty( ) )
+                SignatureAlgorithm algo = SignatureAlgorithm.valueOf( strAlgo );
+                if ( algo != null  )
                 {
-                    SignatureAlgorithm signatureAlgoFromName = signatureAlgo.valueOf( strAlgoName );
-                    if ( signatureAlgoFromName != null )
-                    {
-                        signatureAlgo = signatureAlgoFromName;
-                    }
+                    builder.signWith( algo, key );
                 }
-                
-                builder.signWith( signatureAlgo, TextCodec.BASE64.encode( strSecreyKey ) );
             }
                 
             return builder.compact();
+    }
+    
+    /**
+     * Get a java security Key from a String secreyKey and algorythm name
+     * @param strSecretKey
+     *              The secret Key
+     * @param strAlgoName
+     *              The algorythm name
+     * @return The java securitySecretKey 
+     */
+    public static Key getKey( String strSecretKey, String strAlgoName )
+    {
+        try
+        {
+            Key key = new SecretKeySpec( strSecretKey.getBytes( "UTF-8"), strAlgoName );
+            return key;
+        }
+        catch ( UnsupportedEncodingException e )
+        {
+        }
+        return null;
     }
 
     /*
@@ -302,33 +300,11 @@ public class JWTUtil
      * @param key
      * @return true if the JWT is checked, false otherwise
      */
-    private static boolean checkSignature( String strBase64JWT, Key key )
+    public static boolean checkSignature( String strBase64JWT, Key key )
     {
         try
         {
             Jwts.parser( ).setSigningKey( key ).parseClaimsJws( strBase64JWT );
-        }
-
-        catch( JwtException e )
-        {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Check a JWT signature with a Secrey Key
-     * 
-     * @param strBase64JWT
-     * @param strSecretKey
-     * @return true if the signature is checked, false otherwise
-     */
-    private static boolean checkSignature( String strBase64JWT, String strSecretKey )
-    {
-        try
-        {
-            Jwts.parser( ).setSigningKey( TextCodec.BASE64.encode( strSecretKey ) )
-                    .parseClaimsJws( strBase64JWT );
         }
 
         catch( JwtException e )
