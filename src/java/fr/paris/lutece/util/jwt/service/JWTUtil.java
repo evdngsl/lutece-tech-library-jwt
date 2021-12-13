@@ -47,15 +47,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 /**
  * Utils class for JWT
  */
 public class JWTUtil
 {
-    protected static final Logger LOGGER = Logger.getLogger( "lutece.security.jwt" );
+    protected static final Logger LOGGER = LogManager.getLogger( "lutece.security.jwt" );
 
     /**
      * Check if provided request contains a JWT
@@ -84,7 +85,7 @@ public class JWTUtil
             }
             catch( JwtException e )
             {
-                LOGGER.log( Priority.ERROR, "Provided request doesn't contains any JWT in HTTP headers ", e );
+                LOGGER.error( "Provided request doesn't contains any JWT in HTTP headers ", e );
             }
         }
         return false;
@@ -125,7 +126,7 @@ public class JWTUtil
             }
             catch( Exception e )
             {
-                LOGGER.log( Priority.ERROR, "Unable to check JWT payload for checking claims", e );
+                LOGGER.error( "Unable to check JWT payload for checking claims", e );
                 return false;
             }
         }
@@ -174,7 +175,7 @@ public class JWTUtil
             }
             catch( Exception e )
             {
-                LOGGER.log( Priority.ERROR, "Unable to get JWT Payload value", e );
+                LOGGER.error( "Unable to get JWT Payload value", e );
             }
         }
         return null;
